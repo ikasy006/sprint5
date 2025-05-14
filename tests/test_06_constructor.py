@@ -1,9 +1,3 @@
-import time
-
-import url.url
-
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.wait import WebDriverWait
 from locators.all_locators import HomePageLocators
 
 def test_constructor_transition_to_rolls_success(authorization):
