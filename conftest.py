@@ -2,10 +2,22 @@ import pytest
 import string
 import random
 
-from selenium.webdriver.common.by import By
-from selenium import webdriver
+from url import url
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions
+from locators.all_locators import RegistrationPageLocators, PersonalAccountLocators
+from url.url import Config
+from locators.all_locators import HomePageLocators
+from selenium import webdriver
+
+@pytest.fixture
+def create_driver():
+    driver = webdriver.Chrome()
+    driver.get(Config.BASE_URL)
+
+    yield driver
+
+    driver.quit()
 
 @pytest.fixture(scope="session")
 def generated_valid_password():
@@ -28,34 +40,63 @@ def generated_login():
     return login
 
 @pytest.fixture
-def driver_open_registration():
-    driver = webdriver.Chrome()
-    driver.get("https://stellarburgers.nomoreparties.site/register")
-    return driver
+def authorization(create_driver, generated_login, generated_valid_password):
+    create_driver.get(Config.LOGIN_URL)
+
+    create_driver.find_element(*RegistrationPageLocators.email_input).send_keys(generated_login)
+    create_driver.find_element(*RegistrationPageLocators.password_input).send_keys(generated_valid_password)
+
+    create_driver.find_element(*HomePageLocators.login_account_button).click()
+    WebDriverWait(create_driver, 3).until(expected_conditions.visibility_of_element_located(HomePageLocators.place_order))
+
+    return create_driver
 
 @pytest.fixture
-def driver_open_main_page():
-    driver = webdriver.Chrome()
-    driver.get("https://stellarburgers.nomoreparties.site/")
-    return driver
+def personal_account(authorization):
+    authorization.find_element(*HomePageLocators.account_link).click()
+    WebDriverWait(authorization, 3).until(expected_conditions.visibility_of_element_located(PersonalAccountLocators.exit_button))
 
-@pytest.fixture
-def driver_authorization(generated_login, generated_valid_password):
-    driver = webdriver.Chrome()
-    driver.get("https://stellarburgers.nomoreparties.site/login")
+    return authorization
 
-    driver.find_element(By.XPATH, "//label[text()='Email']/following-sibling::input").send_keys(
-        generated_login)
-    driver.find_element(By.XPATH, "//label[text()='Пароль']/following-sibling::input").send_keys(
-        generated_valid_password)
-    driver.find_element(By.XPATH, "//button[text()='Войти']").click()
 
-    WebDriverWait(driver, 3).until(expected_conditions.visibility_of_element_located((By.ID, 'root')))
-    return driver
 
-@pytest.fixture
-def driver_open_personal_account(driver_authorization):
-    driver_authorization.find_element(By.XPATH, "//p[text()='Личный Кабинет']").click()
-    WebDriverWait(driver_authorization, 3).until(expected_conditions.visibility_of_element_located((By.XPATH, "//button[text()='Сохранить']")))
-    return driver_authorization
 
+
+
+
+
+
+
+
+# @pytest.fixture
+# def driver_open_registration():
+#     driver = webdriver.Chrome()
+#     driver.get("https://stellarburgers.nomoreparties.site/register")
+#     return driver
+#
+# @pytest.fixture
+# def driver_open_main_page():
+#     driver = webdriver.Chrome()
+#     driver.get("https://stellarburgers.nomoreparties.site/")
+#     return driver
+#
+# @pytest.fixture
+# def driver_authorization(generated_login, generated_valid_password):
+#     driver = webdriver.Chrome()
+#     driver.get("https://stellarburgers.nomoreparties.site/login")
+#
+#     driver.find_element(By.XPATH, "//label[text()='Email']/following-sibling::input").send_keys(
+#         generated_login)
+#     driver.find_element(By.XPATH, "//label[text()='Пароль']/following-sibling::input").send_keys(
+#         generated_valid_password)
+#     driver.find_element(By.XPATH, "//button[text()='Войти']").click()
+#
+#     WebDriverWait(driver, 3).until(expected_conditions.visibility_of_element_located((By.ID, 'root')))
+#     return driver
+#
+# @pytest.fixture
+# def driver_open_personal_account(driver_authorization):
+#     driver_authorization.find_element(By.XPATH, "//p[text()='Личный Кабинет']").click()
+#     WebDriverWait(driver_authorization, 3).until(expected_conditions.visibility_of_element_located((By.XPATH, "//button[text()='Сохранить']")))
+#     return driver_authorization
+#
